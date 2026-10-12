@@ -1,0 +1,21 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-f311e62cb1f7b28161d3e610a12fc21695ef280d5ece483fd43bc1b25cf6317a",
+  "author": "Unknown Author",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2023-44487"
+      },
+      "products": [
+        {
+          "@id": "pkg:deb/debian/nginx@1.25.0-1%2Bcustom1?arch=amd64\u0026distro=debian-12.15"
+        }
+      ],
+      "status": "fixed",
+      "timestamp": "2026-10-12T17:56:47.454343336Z"
+    }
+  ],
+  "timestamp": "2026-10-12T17:56:47Z"
+}
