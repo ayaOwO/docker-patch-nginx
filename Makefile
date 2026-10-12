@@ -5,7 +5,7 @@ VEX ?= nginx.vex.json
 .PHONY: package image reports test
 
 package:
-	docker build --file build/Dockerfile --target package --output type=local,dest=dist build
+	docker build --file build/Dockerfile --target package --output type=local,dest=dist .
 
 image: package
 	docker build -t "$(BUILD_IMAGE)" --file Containerfile .

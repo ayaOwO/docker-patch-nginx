@@ -14,7 +14,8 @@ The second one is in nginx and will need a **backport patch**
 Rebuilding the image with the latest package solved the `libfreetype6` CVE and many others
 
 
-For the nginx backport patch I cherry-picked the commit which fixed the CVE
+For the nginx backport I saved the source changes (using `git format-patch)
+and applied that patch during the build with `git apply`
 
 I create a **vex document** for the **backport patch CVE** and used it in the after reports
 
@@ -31,11 +32,17 @@ I used ChatGPT sol 6.1 to help me understand Debian packaging and write this rea
 
 ## Build and reports
 
-- `build/Dockerfile` builds nginx 1.25.0 and cherry-picks [upstream commit
-  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds `nginx.deb`. Package metadata is in `build/control`;
-  the local patch file is not used by this build.
+- `build/Dockerfile` builds nginx 1.25.0 and applies `build/patches/CVE-2023-44487.patch`,
+  adapted from [upstream commit
+  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds `nginx.deb`. Package metadata is in `build/control`.
+  The Docker build context is the repository root. Dependency version bumps remain in the build files;
+  VEX statements remain in `nginx.vex.json`.
 - `make package` builds and exports `dist/nginx.deb` through `build/Dockerfile`.
 - `make image` builds the package, then uses the root `Containerfile` to install it into a Debian runtime image
   and check the nginx configuration. The image is tagged `nginx:1.25-bookworm-echo` by default.
 - `make reports` regenerates the baseline reports, builds the image, and generates the after reports with
   `nginx.vex.json` applied.
+
+- `make test` runs the pytest checks in a test container based on `BUILD_IMAGE` (build it first with `make image`).
+  Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
+  and HTTP/2 response status and body. These checks exercise the custom image only.
