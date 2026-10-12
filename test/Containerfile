@@ -1,0 +1,11 @@
+ARG IMAGE=nginx:1.25-bookworm-echo
+FROM ${IMAGE}
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /test
+COPY test/pyproject.toml test/uv.lock ./
+RUN uv sync --frozen --no-install-project
+COPY test/test_compatibility.py ./
+CMD [".venv/bin/python", "-m", "pytest", "-v", "test_compatibility.py"]

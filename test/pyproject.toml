@@ -2,7 +2,7 @@
 name = "echo"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
+readme = "../README.md"
 authors = [
     { name = "Aya Kraise", email = "tatytoy1@gmail.com" }
 ]
