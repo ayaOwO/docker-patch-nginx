@@ -30,15 +30,8 @@ RUN make install DESTDIR=/app/build
 
 COPY control /app/build/DEBIAN/control
 WORKDIR /app/build
-RUN dpkg-deb --build --root-owner-group /app/build /app/nginx-custom.deb
+RUN dpkg-deb --build --root-owner-group /app/build /app/nginx.deb
 
-FROM debian:bookworm-slim AS runtime
-COPY --from=build /app/nginx-custom.deb /tmp/nginx-custom.deb
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends /tmp/nginx-custom.deb \
-    && rm /tmp/nginx-custom.deb \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN /usr/local/nginx/sbin/nginx -t
-CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]
+FROM scratch AS package
+COPY --from=build /app/nginx.deb /nginx.deb

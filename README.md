@@ -32,10 +32,10 @@ I used ChatGPT sol 6.1 to help me understand Debian packaging and write this rea
 ## Build and reports
 
 - `build/Dockerfile` builds nginx 1.25.0 and cherry-picks [upstream commit
-  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds the `.deb`,
-  installs it into a Debian runtime stage, and checks the nginx configuration. Package metadata is in `build/control`;
+  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds `nginx.deb`. Package metadata is in `build/control`;
   the local patch file is not used by this build.
-- `make image` builds the complete image through `build/Dockerfile`, tagged `nginx:1.25-bookworm-echo` by default. It
-  does not use the root `Containerfile`.
+- `make package` builds and exports `dist/nginx.deb` through `build/Dockerfile`.
+- `make image` builds the package, then uses the root `Containerfile` to install it into a Debian runtime image
+  and check the nginx configuration. The image is tagged `nginx:1.25-bookworm-echo` by default.
 - `make reports` regenerates the baseline reports, builds the image, and generates the after reports with
   `nginx.vex.json` applied.
