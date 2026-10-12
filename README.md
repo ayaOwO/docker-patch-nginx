@@ -1,3 +1,5 @@
+# nginx docker image patching
+
 I will fix these CVEs they are the most severe CVEs and are listed as `KEV` by grype,
 
 meaning they were executed in the real word and pose the most danger
@@ -11,17 +13,56 @@ The second one is in nginx and will need a **backport patch**
 | libfreetype6 | 2.12.1+dfsg-5     | 2.12.1+dfsg-5+deb12u4 | deb  | CVE-2025-27363 | High     | 27.8% (98th)  | 81.9 (kev) |
 | nginx        | 1.25.5-1~bookworm |                       | deb  | CVE-2023-44487 | High     | 100.0% (99th) | 78.8 (kev) |
 
-Rebuilding the image with the latest package solved the `libfreetype6` CVE and many others
+Rebuilding the image with the latest package solved the `libfreetype6-CVE-2025-27363` CVE and many others
 
+| CVE ID         | Severity | Component      | Fix method                                                                                                                                                                                                     | Evidence                                                                                                                                                    |
+|----------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| CVE-2025-27363 | High     | `libfreetype6` | **Remove**: the original image contains `2.12.1+dfsg-5`; FreeType is absent from the rebuilt runtime. The baseline lists `2.12.1+dfsg-5+deb12u4` as a fixed version, but this final image does not install it. | [Baseline finding](baseline-grype.txt), [runtime build](Containerfile), [after report](after-grype.txt)                                                     |
+| CVE-2023-44487 | High     | NGINX HTTP/2   | **Backport**: apply upstream commit `6ceef192e7af1c507826ac38a2d43f08bf265fb9`, adapted to 1.25.0. It limits new streams per event-loop iteration and closes connections after excessive refused streams.      | [Source patch](build/patches/CVE-2023-44487.patch), [patch application](build/Dockerfile), [VEX statement](nginx.vex.json), [after report](after-grype.txt) |
 
 For the nginx backport I saved the source changes (using `git format-patch)
 and applied that patch during the build with `git apply`
 
 I create a **vex document** for the **backport patch CVE** and used it in the after reports
 
+## Build instructions
 
-I used ChatGPT sol 6.1 to help me understand Debian packaging and write this readme and the makefile
-## Scan results (2026-10-12)
+From the repository root, with Docker/BuildKit and GNU Make installed:
+
+```sh
+make package  # Export dist/nginx.deb.
+make image    # Build the package and nginx:1.25-bookworm-echo.
+make reports  # Regenerate baseline and after reports; requires Trivy and Grype.
+```
+
+The package targets `amd64`. Report generation uses `nginx:1.25-bookworm` as
+its baseline and applies `nginx.vex.json` to the rebuilt image's scans.
+
+```sh
+docker run --rm -p 8080:80 nginx:1.25-bookworm-echo
+```
+
+## Image size: original vs. new
+
+Measured from local `amd64` images using `docker image inspect`:
+
+| Image | Size in bytes | Size in MiB |
+|-------|--------------:|------------:|
+| Original: `nginx:1.25-bookworm` | 273,738,794 | 261.06 |
+| New: `nginx:1.25-bookworm-echo` | 123,893,732 | 118.15 |
+| Reduction | 149,845,062 | 142.90 (54.7%) |
+
+## FreeType verification
+
+Direct inspection confirmed that the original image has `libfreetype6`
+`2.12.1+dfsg-5` installed, including `libfreetype.so.6` and
+`libfreetype.so.6.18.3`. In the rebuilt image, `dpkg-query -s libfreetype6`
+reports that the package is not installed, and a filename search under
+`/usr`, `/lib`, and `/opt` finds no FreeType files. Thus the final image
+addresses this CVE by omitting the dependency, rather than installing its
+fixed version. This clarifies the version-bump description above.
+
+## Scan results
 
 | Findings  | [Trivy baseline](baseline-trivy.txt) | [Trivy after](after-trivy.txt) | [Grype baseline](baseline-grype.txt) | [Grype after](after-grype.txt) |
 |-----------|-------------------------------------:|-------------------------------:|-------------------------------------:|-------------------------------:|
@@ -30,11 +71,12 @@ I used ChatGPT sol 6.1 to help me understand Debian packaging and write this rea
 | Total     |                                  802 |                            243 |                                  767 |                            237 |
 | Reduction |                                      |                          69.7% |                                      |                          69.1% |
 
-## Build and reports
+~Counts are scanner findings, including the same CVE against multiple packages, rather than unique CVEs. ~
 
 - `build/Dockerfile` builds nginx 1.25.0 and applies `build/patches/CVE-2023-44487.patch`,
   adapted from [upstream commit
-  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds `nginx.deb`. Package metadata is in `build/control`.
+  `6ceef19`](https://github.com/nginx/nginx/commit/6ceef192e7af1c507826ac38a2d43f08bf265fb9). It builds `nginx.deb`.
+  Package metadata is in `build/control`.
   The Docker build context is the repository root. Dependency version bumps remain in the build files;
   VEX statements remain in `nginx.vex.json`.
 - `make package` builds and exports `dist/nginx.deb` through `build/Dockerfile`.
@@ -47,8 +89,11 @@ I used ChatGPT sol 6.1 to help me understand Debian packaging and write this rea
   Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
   and HTTP/2 response status and body. These checks exercise the custom image only.
 ## Surprises and what I would do differently
+
 - How many CVEs were fixed by "just" updating to newer version. Same base, same app, different dependencies
+- I was suprized by `libfreetype6-CVE-2025-27363` fix was by ommision, I assumed this dependency would update instead
 - How much smaller my image was from the original
-- Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own tests
+- Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own
+  tests
 
 I used ChatGPT sol 6.1 to help me with research on Debian packaging and writing both the Makefile and this README
