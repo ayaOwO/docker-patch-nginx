@@ -46,3 +46,9 @@ I used ChatGPT sol 6.1 to help me understand Debian packaging and write this rea
 - `make test` runs the pytest checks in a test container based on `BUILD_IMAGE` (build it first with `make image`).
   Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
   and HTTP/2 response status and body. These checks exercise the custom image only.
+## Surprises and what I would do differently
+- How many CVEs were fixed by "just" updating to newer version. Same base, same app, different dependencies
+- How much smaller my image was from the original
+- Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own tests
+
+I used ChatGPT sol 6.1 to help me with research on Debian packaging and writing both the Makefile and this README
