@@ -1,11 +1,7 @@
-ARG IMAGE=nginx:1.25-bookworm-echo
-FROM ${IMAGE}
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+FROM ghcr.io/astral-sh/uv:0.13.0-python3.13-trixie-slim
 WORKDIR /test
 COPY test/pyproject.toml test/uv.lock ./
 RUN uv sync --frozen --no-install-project
-COPY test/test_compatibility.py ./
-CMD [".venv/bin/python", "-m", "pytest", "-v", "test_compatibility.py"]
+COPY test/src ./src
+COPY test/tests ./tests
+CMD [".venv/bin/python", "-m", "pytest", "-v"]

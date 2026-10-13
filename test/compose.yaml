@@ -1,0 +1,37 @@
+services:
+  baseline:
+    image: ${BASELINE_IMAGE}
+    depends_on:
+      - echo
+    entrypoint: ["/usr/sbin/nginx"]
+    command: ["-c", "/test/nginx.conf", "-g", "daemon off;"]
+    volumes:
+      - ./nginx.conf:/test/nginx.conf:ro,z
+
+  rebuilt:
+    image: ${BUILD_IMAGE}
+    depends_on:
+      - echo
+    entrypoint: ["/usr/local/nginx/sbin/nginx"]
+    command: ["-c", "/test/nginx.conf", "-g", "daemon off;"]
+    volumes:
+      - ./nginx.conf:/test/nginx.conf:ro,z
+
+  echo:
+    image: echo-pytest:local
+    pull_policy: never
+    command: [".venv/bin/python", "-m", "fastapi", "run", "src/echo/echo_server.py"]
+
+  pytest:
+    image: echo-pytest:local
+    build:
+      context: ..
+      dockerfile: test/Containerfile
+    depends_on:
+      - echo
+      - baseline
+      - rebuilt
+
+networks:
+  default:
+    internal: true

@@ -18,5 +18,4 @@ reports:
 	grype --vex "$(VEX)" "$(BUILD_IMAGE)" > after-grype.txt
 
 test:
-	docker build --build-arg IMAGE="$(BUILD_IMAGE)" -t "$(BUILD_IMAGE)-test" --file test/Containerfile .
-	docker run --rm "$(BUILD_IMAGE)-test"
+	BUILD_IMAGE="$(BUILD_IMAGE)" BASELINE_IMAGE="$(BASELINE_IMAGE)" docker compose -f test/compose.yaml up --build --exit-code-from pytest
