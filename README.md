@@ -15,10 +15,10 @@ The second one is in nginx and will need a **backport patch**
 
 Rebuilding the image with the latest package solved the `libfreetype6-CVE-2025-27363` CVE and many others
 
-| CVE ID         | Severity | Component      | Fix method                                                                                                                                                                                                     | Evidence                                                                                                                                                    |
-|----------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CVE-2025-27363 | High     | `libfreetype6` | **Version bump**: updated from `2.12.1+dfsg-5` to the fixed version `2.12.1+dfsg-5+deb12u4`, which is installed in the rebuilt runtime. | [Baseline finding](baseline-grype.txt), [runtime build](Containerfile), [after report](after-grype.txt) |
-| CVE-2023-44487 | High     | NGINX HTTP/2   | **Backport**: apply upstream commit `6ceef192e7af1c507826ac38a2d43f08bf265fb9`, adapted to 1.25.0. It limits new streams per event-loop iteration and closes connections after excessive refused streams.      | [Source patch](build/patches/CVE-2023-44487.patch), [patch application](build/Dockerfile), [VEX statement](nginx.vex.json), [after report](after-grype.txt) |
+| CVE ID         | Severity | Component      | Fix method                                                                                                                                                                                                | Evidence                                                                                                                                                    |
+|----------------|----------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| CVE-2025-27363 | High     | `libfreetype6` | **Version bump**: updated from `2.12.1+dfsg-5` to the fixed version `2.12.1+dfsg-5+deb12u4`, which is installed in the rebuilt runtime.                                                                   | [Baseline finding](baseline-grype.txt), [runtime build](Containerfile), [after report](after-grype.txt)                                                     |
+| CVE-2023-44487 | High     | NGINX HTTP/2   | **Backport**: apply upstream commit `6ceef192e7af1c507826ac38a2d43f08bf265fb9`, adapted to 1.25.0. It limits new streams per event-loop iteration and closes connections after excessive refused streams. | [Source patch](build/patches/CVE-2023-44487.patch), [patch application](build/Dockerfile), [VEX statement](nginx.vex.json), [after report](after-grype.txt) |
 
 For the nginx backport I saved the source changes (using `git format-patch`)
 and applied that patch during the build with `git apply`
@@ -44,15 +44,20 @@ docker run --rm -p 8080:80 nginx:1.25-bookworm-echo
 ```
 
 # Testing
+
 The tests send requests to 2 nginx contaiters with the same config
 The test verifies the config loaded properly and the nginx follows the requests as expected
-They only test:
+
+### They only test:
+
 * Forwarding requsets
 * route redirect
 * max body size in post request
 * Handling of malformed requsets
-Among other features they do not test:
-* Attempt to exploit the CVE which i backported
+
+### Among other features they do not test:
+
+* Attempt to exploit the CVE which I backported
 * load balance with multiple instances
 * HTTPS TLS
 * Query strings
@@ -73,10 +78,10 @@ I suspect the size difference is because of missing features in the nginx build
 
 | Findings  | [Trivy baseline](baseline-trivy.txt) | [Trivy after](after-trivy.txt) | [Grype baseline](baseline-grype.txt) | [Grype after](after-grype.txt) |
 |-----------|-------------------------------------:|-------------------------------:|-------------------------------------:|-------------------------------:|
-| Critical  |                                   20 |                              4 |                                   49 |                              9 |
-| High      |                                  183 |                             54 |                                  263 |                             62 |
-| Total     |                                  802 |                            243 |                                  767 |                            237 |
-| Reduction |                                      |                          69.7% |                                      |                          69.1% |
+| Critical  |                                   20 |                              4 |                                   47 |                              7 |
+| High      |                                  183 |                             54 |                                  260 |                             59 |
+| Total     |                                  802 |                            248 |                                  767 |                            242 |
+| Reduction |                                      |                          69.1% |                                      |                          68.4% |
 
 ~Counts are scanner findings, including the same CVE against multiple packages, rather than unique CVEs. ~
 
@@ -91,14 +96,15 @@ I suspect the size difference is because of missing features in the nginx build
   and check the nginx configuration. The image is tagged `nginx:1.25-bookworm-echo` by default.
 - `make reports` regenerates the baseline reports, builds the image, and generates the after reports with
   `nginx.vex.json` applied.
-- `make test` runs the pytest checks in a test container based on `BUILD_IMAGE` (build it first with `make image`).
-  Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
-  and HTTP/2 response status and body. These checks exercise the custom image only.
+- `make test` starts the baseline and rebuilt NGINX images with the same custom configuration, an echo backend,
+  and a pytest container (build the rebuilt image first with `make image`). Six tests compare response status,
+  body, and Content-Type, Content-Length, Location, and Allow headers for GET `/`, GET `/test`, a redirect and
+  its destination, POST at and above the 64 KiB body limit, and a malformed HTTP request. Any mismatch exits non-zero.
 
 ## Residual risk assessment
 
 The saved after reports still contain 4 critical and 54 high Trivy findings,
-and 9 critical and 62 high Grype findings. These vary from "fixed" to "will not fix"
+and 7 critical and 59 high Grype findings. These vary from "fixed" to "will not fix"
 While I have updated to the latest versions with apt some packages still have upstream fixes
 
 For "fixed" I'll update.
@@ -108,9 +114,13 @@ For "will not fix" I'll backport patches.
 For "fix deffered" packages I'll remove the packages
 
 ## Surprises and what I would do differently
-- At first I thought I had fixed a CVE by update, but a later check showed the dependency was actually removed instead. This happened because I didn't enable an nginx feature in the build.
+
+- At first I thought I had fixed a CVE by update, but a later check showed the dependency was actually removed instead.
+  This happened because I didn't enable an nginx feature in the build.
 - How many CVEs were fixed by updating to newer version. Same base, same app
 - Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own
   tests
+- The image isn't one to one with the original, needs more research to verify the similarity of the two (compare to
+  official dockerfile)
 
 I used ChatGPT sol 6.1 to help me with research on Debian packaging and writing both the Makefile and this README
