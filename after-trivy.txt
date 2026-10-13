@@ -4,7 +4,7 @@ Report Summary
 ┌─────────────────────────────────────────┬────────┬─────────────────┬─────────┐
 │                 Target                  │  Type  │ Vulnerabilities │ Secrets │
 ├─────────────────────────────────────────┼────────┼─────────────────┼─────────┤
-│ nginx:1.25-bookworm-echo (debian 12.15) │ debian │       243       │    -    │
+│ nginx:1.25-bookworm-echo (debian 12.15) │ debian │       248       │    -    │
 └─────────────────────────────────────────┴────────┴─────────────────┴─────────┘
 Legend:
 - '-': Not scanned
@@ -13,7 +13,7 @@ Legend:
 
 nginx:1.25-bookworm-echo (debian 12.15)
 =======================================
-Total: 243 (UNKNOWN: 4, LOW: 79, MEDIUM: 102, HIGH: 54, CRITICAL: 4)
+Total: 248 (UNKNOWN: 4, LOW: 83, MEDIUM: 103, HIGH: 54, CRITICAL: 4)
 
 ┌────────────────────┬─────────────────────┬──────────┬──────────────┬────────────────────────┬──────────────────┬──────────────────────────────────────────────────────────────┐
 │      Library       │    Vulnerability    │ Severity │    Status    │   Installed Version    │  Fixed Version   │                            Title                             │
@@ -372,7 +372,11 @@ Total: 243 (UNKNOWN: 4, LOW: 79, MEDIUM: 102, HIGH: 54, CRITICAL: 4)
 │                    │                     │          │              │                        │                  │ strncasecmp                                                  │
 │                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-97399                   │
 ├────────────────────┼─────────────────────┼──────────┼──────────────┼────────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────┤
-│ libgcc-s1          │ CVE-2026-102010     │ MEDIUM   │ will_not_fix │ 12.2.0-14+deb12u1      │                  │ gcc-toolset-15-gcc: gcc: gcc-toolset-16: gcc: Denial of      │
+│ libfreetype6       │ CVE-2026-95512      │ MEDIUM   │ fix_deferred │ 2.12.1+dfsg-5+deb12u4  │                  │ freetype: FreeType: Denial of Service via repeated           │
+│                    │                     │          │              │                        │                  │ subroutine allocations in CID font...                        │
+│                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-95512                   │
+├────────────────────┼─────────────────────┤          ├──────────────┼────────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────┤
+│ libgcc-s1          │ CVE-2026-102010     │          │ will_not_fix │ 12.2.0-14+deb12u1      │                  │ gcc-toolset-15-gcc: gcc: gcc-toolset-16: gcc: Denial of      │
 │                    │                     │          │              │                        │                  │ Service via use-after-free in binary heap...                 │
 │                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-102010                  │
 │                    ├─────────────────────┤          ├──────────────┤                        ├──────────────────┼──────────────────────────────────────────────────────────────┤
@@ -498,7 +502,22 @@ Total: 243 (UNKNOWN: 4, LOW: 79, MEDIUM: 102, HIGH: 54, CRITICAL: 4)
 │                    │                     │          │              │                        │                  │ discrepancy in pam_userdb module                             │
 │                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-54411                   │
 ├────────────────────┼─────────────────────┼──────────┼──────────────┼────────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────┤
-│ libsmartcols1      │ CVE-2026-53613      │ HIGH     │ affected     │ 2.38.1-5+deb12u3       │                  │ util-linux: util-linux: TOCTOU in the mount program via      │
+│ libpng16-16        │ CVE-2021-4214       │ LOW      │ affected     │ 1.6.39-2+deb12u6       │                  │ libpng: hardcoded value leads to heap-overflow               │
+│                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2021-4214                    │
+│                    ├─────────────────────┤          │              │                        ├──────────────────┼──────────────────────────────────────────────────────────────┤
+│                    │ CVE-2025-28162      │          │              │                        │                  │ libpng: libpng: Denial of Service via buffer overflow in     │
+│                    │                     │          │              │                        │                  │ pngimage utility                                             │
+│                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2025-28162                   │
+│                    ├─────────────────────┤          │              │                        ├──────────────────┼──────────────────────────────────────────────────────────────┤
+│                    │ CVE-2025-28164      │          │              │                        │                  │ libpng: libpng: Denial of Service via buffer overflow in     │
+│                    │                     │          │              │                        │                  │ png_create_read_struct() function                            │
+│                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2025-28164                   │
+│                    ├─────────────────────┤          │              │                        ├──────────────────┼──────────────────────────────────────────────────────────────┤
+│                    │ CVE-2026-3713       │          │              │                        │                  │ libpng: libpng: Heap-based buffer overflow in pnm2png allows │
+│                    │                     │          │              │                        │                  │ information disclosure and denial...                         │
+│                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-3713                    │
+├────────────────────┼─────────────────────┼──────────┤              ├────────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────┤
+│ libsmartcols1      │ CVE-2026-53613      │ HIGH     │              │ 2.38.1-5+deb12u3       │                  │ util-linux: util-linux: TOCTOU in the mount program via      │
 │                    │                     │          │              │                        │                  │ ancestor directory swap on...                                │
 │                    │                     │          │              │                        │                  │ https://avd.aquasec.com/nvd/cve-2026-53613                   │
 │                    ├─────────────────────┤          │              │                        ├──────────────────┼──────────────────────────────────────────────────────────────┤

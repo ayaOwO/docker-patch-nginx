@@ -1,6 +1,6 @@
 Package: nginx
 Version: 1.25.0-1+custom1
 Architecture: amd64
-Depends: libc6, libcrypt1
+Depends: libc6, libcrypt1, libjpeg62-turbo, libpng16-16, libfreetype6, libwebp7
 Maintainer: Aya <ayakraise@gmail.com>
 Description: Custom source-built nginx

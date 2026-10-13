@@ -3,6 +3,7 @@ COPY dist/nginx.deb /tmp/nginx.deb
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends /tmp/nginx.deb \
+    && ldconfig \
     && rm /tmp/nginx.deb \
     && rm -rf /var/lib/apt/lists/*
 

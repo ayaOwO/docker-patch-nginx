@@ -45,12 +45,14 @@ docker run --rm -p 8080:80 nginx:1.25-bookworm-echo
 ## Image size: original vs. new
 
 Measured from local `amd64` images using `docker image inspect`:
+Since I didn't make any substantial effort to reduce the image size.
+I suspect the size difference is because of missing features in the nginx build
 
-| Image | Size in bytes | Size in MiB |
-|-------|--------------:|------------:|
-| Original: `nginx:1.25-bookworm` | 273,738,794 | 261.06 |
-| New: `nginx:1.25-bookworm-echo` | 123,893,732 | 118.15 |
-| Reduction | 149,845,062 | 142.90 (54.7%) |
+| Image                           | Size in bytes |   Size in MiB |
+|---------------------------------|--------------:|--------------:|
+| Original: `nginx:1.25-bookworm` |   273,738,794 |        261.06 |
+| New: `nginx:1.25-bookworm-echo` |   181,076,466 |        172.69 |
+| Reduction                       |    92,662,328 | 88.37 (33.9%) |
 
 ## FreeType verification
 
@@ -88,10 +90,22 @@ fixed version. This clarifies the version-bump description above.
 - `make test` runs the pytest checks in a test container based on `BUILD_IMAGE` (build it first with `make image`).
   Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
   and HTTP/2 response status and body. These checks exercise the custom image only.
+
+## Residual risk assessment
+
+The saved after reports still contain 4 critical and 54 high Trivy findings,
+and 9 critical and 62 high Grype findings. These vary from "fixed" to "will not fix"
+While I have updated to the latest versions with apt some packages still have upstream fixes
+
+For "fixed" I'll update.
+
+For "will not fix" I'll backport patches.
+
+For "fix deffered" packages I'll remove the packages
+
 ## Surprises and what I would do differently
 
 - How many CVEs were fixed by "just" updating to newer version. Same base, same app, different dependencies
-- I was suprized by `libfreetype6-CVE-2025-27363` fix was by ommision, I assumed this dependency would update instead
 - How much smaller my image was from the original
 - Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own
   tests
