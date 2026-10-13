@@ -17,10 +17,10 @@ Rebuilding the image with the latest package solved the `libfreetype6-CVE-2025-2
 
 | CVE ID         | Severity | Component      | Fix method                                                                                                                                                                                                     | Evidence                                                                                                                                                    |
 |----------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CVE-2025-27363 | High     | `libfreetype6` | **Remove**: the original image contains `2.12.1+dfsg-5`; FreeType is absent from the rebuilt runtime. The baseline lists `2.12.1+dfsg-5+deb12u4` as a fixed version, but this final image does not install it. | [Baseline finding](baseline-grype.txt), [runtime build](Containerfile), [after report](after-grype.txt)                                                     |
+| CVE-2025-27363 | High     | `libfreetype6` | **Version bump**: updated from `2.12.1+dfsg-5` to the fixed version `2.12.1+dfsg-5+deb12u4`, which is installed in the rebuilt runtime. | [Baseline finding](baseline-grype.txt), [runtime build](Containerfile), [after report](after-grype.txt) |
 | CVE-2023-44487 | High     | NGINX HTTP/2   | **Backport**: apply upstream commit `6ceef192e7af1c507826ac38a2d43f08bf265fb9`, adapted to 1.25.0. It limits new streams per event-loop iteration and closes connections after excessive refused streams.      | [Source patch](build/patches/CVE-2023-44487.patch), [patch application](build/Dockerfile), [VEX statement](nginx.vex.json), [after report](after-grype.txt) |
 
-For the nginx backport I saved the source changes (using `git format-patch)
+For the nginx backport I saved the source changes (using `git format-patch`)
 and applied that patch during the build with `git apply`
 
 I create a **vex document** for the **backport patch CVE** and used it in the after reports
@@ -54,16 +54,6 @@ I suspect the size difference is because of missing features in the nginx build
 | New: `nginx:1.25-bookworm-echo` |   181,076,466 |        172.69 |
 | Reduction                       |    92,662,328 | 88.37 (33.9%) |
 
-## FreeType verification
-
-Direct inspection confirmed that the original image has `libfreetype6`
-`2.12.1+dfsg-5` installed, including `libfreetype.so.6` and
-`libfreetype.so.6.18.3`. In the rebuilt image, `dpkg-query -s libfreetype6`
-reports that the package is not installed, and a filename search under
-`/usr`, `/lib`, and `/opt` finds no FreeType files. Thus the final image
-addresses this CVE by omitting the dependency, rather than installing its
-fixed version. This clarifies the version-bump description above.
-
 ## Scan results
 
 | Findings  | [Trivy baseline](baseline-trivy.txt) | [Trivy after](after-trivy.txt) | [Grype baseline](baseline-grype.txt) | [Grype after](after-grype.txt) |
@@ -86,7 +76,6 @@ fixed version. This clarifies the version-bump description above.
   and check the nginx configuration. The image is tagged `nginx:1.25-bookworm-echo` by default.
 - `make reports` regenerates the baseline reports, builds the image, and generates the after reports with
   `nginx.vex.json` applied.
-
 - `make test` runs the pytest checks in a test container based on `BUILD_IMAGE` (build it first with `make image`).
   Tests check the package version, nginx configuration, HTTP/2 module, backport diagnostic strings, and HTTP/1.1
   and HTTP/2 response status and body. These checks exercise the custom image only.
@@ -104,9 +93,8 @@ For "will not fix" I'll backport patches.
 For "fix deffered" packages I'll remove the packages
 
 ## Surprises and what I would do differently
-
-- How many CVEs were fixed by "just" updating to newer version. Same base, same app, different dependencies
-- How much smaller my image was from the original
+- At first I thought I had fixed a CVE by update, but a later check showed the dependency was actually removed instead. This happened because I didn't enable an nginx feature in the build.
+- How many CVEs were fixed by updating to newer version. Same base, same app
 - Run the maintaned [nginx test suite](https://github.com/nginx/nginx-tests) to verify compatibility instead of my own
   tests
 
