@@ -32,6 +32,7 @@ From the repository root, with Docker/BuildKit and GNU Make installed:
 ```sh
 make package  # Export dist/nginx.deb.
 make image    # Build the package and nginx:1.25-bookworm-echo.
+make test     # Compare baseline and rebuilt NGINX responses; run after make image.
 make reports  # Regenerate baseline and after reports; requires Trivy and Grype.
 ```
 
@@ -41,6 +42,20 @@ its baseline and applies `nginx.vex.json` to the rebuilt image's scans.
 ```sh
 docker run --rm -p 8080:80 nginx:1.25-bookworm-echo
 ```
+
+# Testing
+The tests send requests to 2 nginx contaiters with the same config
+The test verifies the config loaded properly and the nginx follows the requests as expected
+They only test:
+* Forwarding requsets
+* route redirect
+* max body size in post request
+* Handling of malformed requsets
+Among other features they do not test:
+* Attempt to exploit the CVE which i backported
+* load balance with multiple instances
+* HTTPS TLS
+* Query strings
 
 ## Image size: original vs. new
 
